@@ -318,8 +318,10 @@ current_Q_list = list(current_Q_dict.keys())
 
 # sets the date of interest at a global level
 date_1 = datetime.date(2018, 10, 1)
-date_2 = datetime.date(2030, 10, 7)
+date_2 = datetime.date(2030, 10, 1)
 
 # runs the functions that put milestones into word doc
 print_miles = run_standard_comparator(current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
 print_miles.save('C:\\Users\\Standalone\\Will\\Q3_1819_milestones_for_banke.xlsx')
+
+#change
