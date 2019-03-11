@@ -3,13 +3,14 @@ time peiod) and any movement in dates in comparison to last quarter and one year
 project)
 
 To operate the programme you should enter three quarter master information, specify the time period of interest,
-and specify the name and location of the output wb'''
+and specify the name and location of the output wb
 
-'''Notes on how the programme works
-'''
+Notes on how the programme works to follow'''
+
 import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
+from utils import baselining
 
 
 '''Milestone lists for both keys and data/dates. Choose the lists based on the type/number of milestones that 
@@ -75,6 +76,7 @@ bc_milestone_keys = ['Approval MM1', 'Approval MM3', 'Approval MM10']
 bc_milestone_dates = ['Approval MM1 Forecast / Actual', 'Approval MM3 Forecast / Actual',
                       'Approval MM10 Forecast / Actual']
 
+
 '''function that filters ALL project reported milestone into a dictionary, which is then passed into the time_difference
  function'''
 def project_milestones_dict(proj_name, data, m_list_keys, m_list_dates):
@@ -102,7 +104,7 @@ def project_milestones_dict(proj_name, data, m_list_keys, m_list_dates):
         for i in range(0, len(milestone_keys)):
             milestone_key = milestone_keys[i]
             milestone_date = milestone_dates[i]
-            '''checks for dates being reported as strings. Does not handle error but prints the problemtic data so it
+            '''checks for dates being reported as strings. Does not handle error but prints the problematic data so it
             can be changed in master'''
             if type(milestone_date) == str:
                 print(milestone_key, milestone_date)
@@ -123,24 +125,28 @@ def project_milestones_dict(proj_name, data, m_list_keys, m_list_dates):
 reported milestone dates'''
 
 def project_time_difference(proj_name, proj_m_data_1, proj_m_data_2):
+    '''
+    :param proj_name: project name
+    :param proj_m_data_1: first project milestone dictionary structured as {milestone name : milestone date)
+    :param proj_m_data_2: second project milestone dictionary structured as above
+    :return:
+    '''
     td_dict = {}
-    print(proj_m_data_1[proj_name])
     for milestone in proj_m_data_1[proj_name]:
         milestone_date = proj_m_data_1[proj_name][milestone]
-        try:
-            if date_1 <= milestone_date <= date_2:
-                try:
-                    old_milestone_date = proj_m_data_2[proj_name][milestone]
-                    time_delta = (milestone_date - old_milestone_date).days  # time_delta calculated here
-                    if time_delta == 0:
-                        td_dict[milestone] = 0
-                    else:
-                        td_dict[milestone] = time_delta
-                except KeyError:
-                    td_dict[milestone] = 'Not reported'
-        except KeyError:
-            td_dict[milestone] = 'Not reported'
+        if date_1 <= milestone_date <= date_2:
+            print(milestone_date)
+            try:
+                old_milestone_date = proj_m_data_2[proj_name][milestone]
+                time_delta = (milestone_date - old_milestone_date).days  # time_delta calculated here
+                if time_delta == 0:
+                    td_dict[milestone] = 0
+                else:
+                    td_dict[milestone] = time_delta
+            except KeyError:
+                td_dict[milestone] = 'Not reported'
 
+    print(td_dict)
     return td_dict
 
 
@@ -189,9 +195,9 @@ def put_into_wb(project_list, t_dict, td_dict, td_dict2, wb):
 
     row_num = 0
     for name in project_list:
-        print(name)
-        print(t_dict[name].keys())
-        for i, milestone in enumerate(t_dict[name].keys()):
+        #print(name)
+        #print(t_dict[name].keys())
+        for i, milestone in enumerate(td_dict[name].keys()):
             ws.cell(row=row_num+i+2, column=1).value = name
             ws.cell(row=row_num+i+2, column=2).value = milestone
             try:
@@ -218,9 +224,9 @@ def put_into_wb(project_list, t_dict, td_dict, td_dict2, wb):
     ws.cell(row=1, column=5).value = '1/y change'
 
 
-    print(t_dict)
-    print(td_dict)
-    print(td_dict2)
+    #print(t_dict)
+    #print(td_dict)
+    #print(td_dict2)
 
     return wb
 
@@ -336,7 +342,7 @@ yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters 
 
 '''Pass lists of projects of interest i.e those to include in graph here'''
 '''all projects in portfolio'''
-current_Q_list = list(current_Q_dict.keys())
+#current_Q_list = list(current_Q_dict.keys())
 
 '''projects by group'''
 # group_names = ['Rail Group', 'HSMRPG', 'International Security and Environment', 'Roads Devolution & Motoring']
@@ -353,12 +359,12 @@ current_Q_list = list(current_Q_dict.keys())
 # current_Q_list = ['East Midlands Franchise','South Eastern Rail Franchise Competition', 'West Coast Partnership Franchise',
 #                 'Cross Country Rail Franchise Competition']       # Rail Franchising
 '''single project'''
-#current_Q_list = ['Thameslink Programme']
+current_Q_list = ['Thameslink Programme']
 
 # sets the date of interest at a global level
-date_1 = datetime.date(2018, 10, 1)
-date_2 = datetime.date(2030, 10, 1)
+date_1 = datetime.date(2019, 1, 1)
+date_2 = datetime.date(2030, 1, 1)
 
 # runs the functions that put milestones into word doc
 print_miles = run_standard_comparator(current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict, a_p_milestone_keys, a_p_milestone_dates)
-print_miles.save('C:\\Users\\Standalone\\Will\\for_min_slides_milestones.xlsx')
+print_miles.save('C:\\Users\\Standalone\\Will\\testing.xlsx')
