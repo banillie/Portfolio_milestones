@@ -88,8 +88,6 @@ def project_milestones_dict(proj_name, data, m_list_keys, m_list_dates):
             m_type = proj_data[key]
             milestone_keys.append(m_type)
 
-        #print(milestone_keys)
-
         '''m_list2 is a list of milestone dates. The below loop puts specific project milestone dates into a list'''
         milestone_dates = []
         for date in m_list_dates:
@@ -174,6 +172,13 @@ def filter_group(dictionary, group_of_interest):
 
     return project_list
 
+def filter_gmpp(dictionary):
+    project_list = []
+    for project in dictionary:
+        if dictionary[project]['GMPP - IPA ID Number'] is not None:
+            project_list.append(project)
+
+    return project_list
 
 # '''function places information into a word document. key arguments that are
 # passed into it are.
@@ -191,7 +196,7 @@ def put_into_wb(project_list, t_dict, td_dict, td_dict2, wb):
     for name in project_list:
         print(name)
         print(t_dict[name].keys())
-        for i, milestone in enumerate(t_dict[name].keys()):
+        for i, milestone in enumerate(td_dict[name].keys()):
             ws.cell(row=row_num+i+2, column=1).value = name
             ws.cell(row=row_num+i+2, column=2).value = milestone
             try:
@@ -330,9 +335,12 @@ def run_standard_comparator(proj_list, dict_1, dict_2, dict_3, milestone_keys, m
 
 
 '''three quarters master dictionaries are required'''
-current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\master_3_2018.xlsx')
-last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\master_2_2018.xlsx')
-yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\master_4_2017.xlsx')
+current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
+                                          'core data\\master_4_2018.xlsx')
+last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
+                                       'core data\\master_3_2018.xlsx')
+yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
+                                          'core data\\master_1_2018.xlsx')
 
 '''Pass lists of projects of interest i.e those to include in graph here'''
 '''all projects in portfolio'''
@@ -340,6 +348,7 @@ current_Q_list = list(current_Q_dict.keys())
 
 '''projects by group'''
 # group_names = ['Rail Group', 'HSMRPG', 'International Security and Environment', 'Roads Devolution & Motoring']
+#current_Q_list = filter_gmpp(current_Q_dict)
 # current_Q_list = filter_group(current_Q_dict, 'HSMRPG')
 # last_Q_list = filter_group(last_Q_dict, 'HSMRPG')
 # new_projects_not_reporting = [x for x in current_Q_list if x not in last_Q_list]
@@ -356,9 +365,9 @@ current_Q_list = list(current_Q_dict.keys())
 #current_Q_list = ['Thameslink Programme']
 
 # sets the date of interest at a global level
-date_1 = datetime.date(2018, 10, 1)
-date_2 = datetime.date(2030, 10, 1)
+date_1 = datetime.date(2018, 1, 1)
+date_2 = datetime.date(2030, 1, 1)
 
 # runs the functions that put milestones into word doc
 print_miles = run_standard_comparator(current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict, a_p_milestone_keys, a_p_milestone_dates)
-print_miles.save('C:\\Users\\Standalone\\Will\\for_min_slides_milestones.xlsx')
+print_miles.save('C:\\Users\\Standalone\\Will\\testing_lucky.xlsx')
