@@ -9,12 +9,11 @@ There quarters master information, typically:
 output document:
 Depending on instructions -
 1) excel workbook with all project information
-2) individual excel workbooks with project information
 
 To operate the programme you should:
 1) Enter the file paths to three quarters master data,
 2) Specify the date from which to filter milestones,
-3) Specify the specify the name and location of the output wb - consider whether to return one wb or multiple ones
+3) Specify the specify the name and location of the output wb
 
 '''
 
@@ -121,30 +120,27 @@ def filter_gmpp(dictionary):
 
     return project_list
 
-def put_into_wb_all(project_list, t_dict, td_dict, td_dict2, wb):
+def put_into_wb_all(name, t_dict, td_dict, td_dict2):
+    wb = Workbook()
     ws = wb.active
 
     row_num = 2
-    for name in project_list:
-        for i, milestone in enumerate(td_dict[name].keys()):
-            ws.cell(row=row_num + i, column=1).value = name
-            ws.cell(row=row_num + i, column=2).value = milestone
-            try:
-                ws.cell(row=row_num + i, column=3).value = t_dict[name][milestone]
-            except KeyError:
-                ws.cell(row=row_num + i, column=3).value = 0
+    for i, milestone in enumerate(td_dict[name].keys()):
+        ws.cell(row=row_num + i, column=1).value = name
+        ws.cell(row=row_num + i, column=2).value = milestone
+        try:
+            ws.cell(row=row_num + i, column=3).value = t_dict[name][milestone]
+        except KeyError:
+            ws.cell(row=row_num + i, column=3).value = 0
 
-            try:
-                ws.cell(row=row_num + i, column=4).value = td_dict[name][milestone]
-            except KeyError:
-                ws.cell(row=row_num + i, column=4).value = 0
-            try:
-                ws.cell(row=row_num + i, column=5).value = td_dict2[name][milestone]
-            except KeyError:
-                ws.cell(row=row_num + i, column=5).value = 0
-
-        #row_num += 1
-        row_num = row_num + len(td_dict[name])
+        try:
+            ws.cell(row=row_num + i, column=4).value = td_dict[name][milestone]
+        except KeyError:
+            ws.cell(row=row_num + i, column=4).value = 0
+        try:
+            ws.cell(row=row_num + i, column=5).value = td_dict2[name][milestone]
+        except KeyError:
+            ws.cell(row=row_num + i, column=5).value = 0
 
     ws.cell(row=1, column=1).value = 'Project'
     ws.cell(row=1, column=2).value = 'Milestone'
@@ -202,36 +198,9 @@ def put_into_wb_all(project_list, t_dict, td_dict, td_dict2, wb):
 #     return doc
 
 
-'''Function that runs the programme. This is also where the filtering of dates happens (understand better. date filters
-are currently set at the global level. This is the standard one. It takes all milestones reporting in
-current quarter and prints comparisions against those. It does not check to see whether milestones
-have been removed'''
-def run_standard_comparator_all(proj_list, dict_1, dict_2, dict_3):
-    wb = Workbook()
-    ws = wb.active
-
-    '''gather mini-dictionaries for each quarter'''
-    current_milestones_dict = ap_p_milestone_data_bulk(proj_list, dict_1)
-    last_milestones_dict = ap_p_milestone_data_bulk(proj_list, dict_2)
-    oldest_milestones_dict = ap_p_milestone_data_bulk(proj_list, dict_3)
-
-
-    '''calculate time current and last quarter'''
-    first_diff_dict = {}
-    second_diff_dict = {}
-    for x in proj_list:
-        first_diff = project_time_difference(x, current_milestones_dict, last_milestones_dict)
-        first_diff_dict[x] = first_diff
-        second_diff = project_time_difference(x, current_milestones_dict, oldest_milestones_dict)
-        second_diff_dict[x] = second_diff
-
-    run = put_into_wb_all(proj_list, current_milestones_dict, first_diff_dict, second_diff_dict, wb)
-
-    return run
-
 '''1) specify file path to master data'''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
-                                          'core data\\master_4_2018_wip.xlsx')
+                                          'core data\\master_4_2018_hs2_draft.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
                                        'core data\\master_3_2018.xlsx')
 yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
@@ -255,5 +224,20 @@ current_Q_list = list(current_Q_dict.keys())
 date_1 = datetime.date(2018, 9, 1)
 
 '''3) Specify file path to output document'''
-print_miles = run_standard_comparator_all(current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
-print_miles.save('C:\\Users\\Standalone\\Will\\Q4_1819_milestone_changes.xlsx')
+
+current_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict)
+last_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, last_Q_dict)
+oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, current_Q_dict)
+
+first_diff_dict = {}
+second_diff_dict = {}
+for x in current_Q_list:
+    first_diff = project_time_difference(x, current_milestones_dict, last_milestones_dict)
+    first_diff_dict[x] = first_diff
+    second_diff = project_time_difference(x, current_milestones_dict, oldest_milestones_dict)
+    second_diff_dict[x] = second_diff
+
+
+for name in current_Q_list:
+        wb = put_into_wb_all(name, current_milestones_dict, first_diff_dict, second_diff_dict)
+        wb.save('C:\\Users\\Standalone\\Will\\Q4_{}_milestone_changes_check_ago.xlsx'.format(name))
