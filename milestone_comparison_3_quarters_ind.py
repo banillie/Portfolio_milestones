@@ -8,7 +8,7 @@ There quarters master information, typically:
 
 output document:
 Depending on instructions -
-1) excel workbook with all project information
+1) individual excel workbooks with project information
 
 To operate the programme you should:
 1) Enter the file paths to three quarters master data,
@@ -20,7 +20,6 @@ To operate the programme you should:
 import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
-
 
 '''Function to filter out ALL milestone data'''
 def all_milestone_data_bulk(project_list, master_data):
@@ -63,16 +62,19 @@ def ap_p_milestone_data_bulk(project_list, master_data):
             for i in range(1, 50):
                 try:
                     try:
-                        lower_dict[p_data['Approval MM' + str(i)]] = p_data['Approval MM' + str(i) + ' Forecast / Actual']
+                        lower_dict[p_data['Approval MM' + str(i)]] = \
+                            {p_data['Approval MM' + str(i) + ' Forecast / Actual'] : p_data['Approval MM' + str(i) + ' Notes']}
                     except KeyError:
-                        lower_dict[p_data['Approval MM' + str(i)]] = p_data['Approval MM' + str(i) + ' Forecast - Actual']
+                        lower_dict[p_data['Approval MM' + str(i)]] = \
+                            {p_data['Approval MM' + str(i) + ' Forecast - Actual'] : p_data['Approval MM' + str(i) + ' Notes']}
 
                 except KeyError:
                     pass
 
             for i in range(18, 67):
                 try:
-                    lower_dict[p_data['Project MM' + str(i)]] = p_data['Project MM' + str(i) + ' Forecast - Actual']
+                    lower_dict[p_data['Project MM' + str(i)]] = \
+                        {p_data['Project MM' + str(i) + ' Forecast - Actual'] : p_data['Project MM' + str(i) + ' Notes']}
                 except KeyError:
                     pass
         except KeyError:
@@ -82,27 +84,36 @@ def ap_p_milestone_data_bulk(project_list, master_data):
 
     return upper_dict
 
-'''Function calculates the time difference of reported milestone between two quarters'''
-def project_time_difference(proj_name, proj_m_data_1, proj_m_data_2):
-    td_dict = {}
-    for milestone in proj_m_data_1[proj_name]:
-        if milestone is not None:
-            milestone_date = proj_m_data_1[proj_name][milestone]
-            try:
-                if date_1 <= milestone_date:
-                    try:
-                        old_milestone_date = proj_m_data_2[proj_name][milestone]
-                        time_delta = (milestone_date - old_milestone_date).days  # time_delta calculated here
-                        if time_delta == 0:
-                            td_dict[milestone] = 0
-                        else:
-                            td_dict[milestone] = time_delta
-                    except (KeyError, TypeError):
-                        td_dict[milestone] = 'Not reported' # not reported that quarter
-            except (KeyError, TypeError):
-                td_dict[milestone] = 'No date provided' # date has now been removed
+'''
+Function calculates the time difference of reported milestone between two quarters
+'''
 
-    return td_dict
+def project_time_difference(proj_m_data_1, proj_m_data_2):
+    upper_dict = {}
+
+    for proj_name in proj_m_data_1:
+        td_dict = {}
+        for milestone in proj_m_data_1[proj_name]:
+            if milestone is not None:
+                milestone_date = tuple(proj_m_data_1[proj_name][milestone])[0]
+                try:
+                    if date_of_interest <= milestone_date:
+                        try:
+                            old_milestone_date = tuple(proj_m_data_2[proj_name][milestone])[0]
+                            time_delta = (milestone_date - old_milestone_date).days  # time_delta calculated here
+                            if time_delta == 0:
+                                td_dict[milestone] = 0
+                            else:
+                                td_dict[milestone] = time_delta
+                        except (KeyError, TypeError):
+                            td_dict[milestone] = 'Not reported' # not reported that quarter
+                except (KeyError, TypeError):
+                    td_dict[milestone] = 'No date provided' # date has now been removed
+
+        upper_dict[proj_name] = td_dict
+
+    return upper_dict
+
 
 def filter_group(dictionary, group_of_interest):
     project_list = []
@@ -129,7 +140,8 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
         ws.cell(row=row_num + i, column=1).value = name
         ws.cell(row=row_num + i, column=2).value = milestone
         try:
-            ws.cell(row=row_num + i, column=3).value = t_dict[name][milestone]
+            milestone_date = tuple(t_dict[name][milestone])[0]
+            ws.cell(row=row_num + i, column=3).value = milestone_date
         except KeyError:
             ws.cell(row=row_num + i, column=3).value = 0
 
@@ -142,11 +154,18 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
         except KeyError:
             ws.cell(row=row_num + i, column=5).value = 0
 
+        try:
+            milestone_date = tuple(t_dict[name][milestone])[0]
+            ws.cell(row=row_num + i, column=6).value = t_dict[name][milestone][milestone_date] # provided notes
+        except IndexError:
+            ws.cell(row=row_num + i, column=6).value = 0
+
     ws.cell(row=1, column=1).value = 'Project'
     ws.cell(row=1, column=2).value = 'Milestone'
     ws.cell(row=1, column=3).value = 'Date'
     ws.cell(row=1, column=4).value = '3/m change'
     ws.cell(row=1, column=5).value = '1/y change'
+    ws.cell(row=1, column=6).value = 'Notes'
 
 
     return wb
@@ -200,7 +219,7 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
 
 '''1) specify file path to master data'''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
-                                          'core data\\master_4_2018_hs2_draft.xlsx')
+                                          'core data\\master_4_2018.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
                                        'core data\\master_3_2018.xlsx')
 yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
@@ -221,23 +240,17 @@ current_Q_list = list(current_Q_dict.keys())
 #current_Q_list = ['Thameslink Programme']
 
 '''2) Specify date after which project milestones should be returned. NOTE: Python date format is (YYYY,MM,DD)'''
-date_1 = datetime.date(2018, 9, 1)
+date_of_interest = datetime.date(2018, 9, 1)
 
 '''3) Specify file path to output document'''
 
-current_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict)
+current_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, current_Q_dict)
 last_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, last_Q_dict)
-oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, current_Q_dict)
+oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict)
 
-first_diff_dict = {}
-second_diff_dict = {}
-for x in current_Q_list:
-    first_diff = project_time_difference(x, current_milestones_dict, last_milestones_dict)
-    first_diff_dict[x] = first_diff
-    second_diff = project_time_difference(x, current_milestones_dict, oldest_milestones_dict)
-    second_diff_dict[x] = second_diff
-
+first_diff_dict = project_time_difference(current_milestones_dict, last_milestones_dict)
+second_diff_dict = project_time_difference(current_milestones_dict, oldest_milestones_dict)
 
 for name in current_Q_list:
         wb = put_into_wb_all(name, current_milestones_dict, first_diff_dict, second_diff_dict)
-        wb.save('C:\\Users\\Standalone\\Will\\Q4_{}_milestone_changes_check_ago.xlsx'.format(name))
+        wb.save('C:\\Users\\Standalone\\Will\\Q4_{}_milestone_changes_testing.xlsx'.format(name))
