@@ -20,6 +20,7 @@ To operate the programme you should:
 import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
+from openpyxl.styles import Font
 
 
 
@@ -169,6 +170,60 @@ def put_into_wb_all(project_list, t_dict, td_dict, td_dict2, wb):
 
     return wb
 
+
+def check_m_keys_in_excel(project_list, t_dict_one, t_dict_two, t_dict_three):
+    wb = Workbook()
+    ws = wb.active
+    red_text = Font(color="00fc2525")
+
+    row_num = 2
+    for name in project_list:
+        one = list(t_dict_one[name].keys())
+        [x for x in one if x is not None].sort()
+        two = list(t_dict_two[name].keys())
+        [x for x in two if x is not None].sort()
+        three = list(t_dict_three[name].keys())
+        [x for x in three if x is not None].sort()
+
+        long = longest_list(one, two, three)
+        for i in range(0, len(long)):
+            ws.cell(row=row_num + i, column=1).value = name
+            try:
+                ws.cell(row=row_num + i, column=2).value = one[i]
+            except IndexError:
+                pass
+            try:
+                ws.cell(row=row_num + i, column=3).value = two[i]
+                if two[i] not in one:
+                    ws.cell(row=row_num + i, column=3).font = red_text
+            except IndexError:
+                pass
+            try:
+                ws.cell(row=row_num + i, column=4).value = three[i]
+                if three[i] not in one:
+                    ws.cell(row=row_num + i, column=4).font = red_text
+            except IndexError:
+                pass
+
+        row_num = row_num + len(long)
+
+    return wb
+
+
+
+def longest_list(one, two, three):
+    list_list = [one, two, three]
+    #print(list_list)
+    a = len(one)
+    b = len(two)
+    c = len(three)
+
+    out = [a,b,c]
+    out.sort()
+    for x in list_list:
+        if out[-1] == len(x):
+            return x
+
 # def printing_three(project_list, t_dict, td_dict, td_dict2, ordered_dict, ws):
 #
 #
@@ -233,10 +288,11 @@ def run_standard_comparator_all(proj_list, dict_1, dict_2, dict_3):
 
     '''calculate time current and last quarter'''
     first_diff_dict = project_time_difference(current_milestones_dict, last_milestones_dict)
-    print(first_diff_dict)
+    #print(first_diff_dict)
     second_diff_dict = project_time_difference(current_milestones_dict, oldest_milestones_dict)
 
     run = put_into_wb_all(proj_list, current_milestones_dict, first_diff_dict, second_diff_dict, wb)
+    #run = check_m_keys_in_excel(proj_list, current_milestones_dict, last_milestones_dict, oldest_milestones_dict)
 
     return run
 
@@ -263,8 +319,8 @@ current_Q_list = list(current_Q_dict.keys())
 #current_Q_list = ['Thameslink Programme']
 
 '''2) Specify date after which project milestones should be returned. NOTE: Python date format is (YYYY,MM,DD)'''
-date_of_interest = datetime.date(2018, 9, 1)
+date_of_interest = datetime.date(2000, 9, 1)
 
 '''3) Specify file path to output document'''
 print_miles = run_standard_comparator_all(current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
-print_miles.save('C:\\Users\\Standalone\\Will\\Q4_1819_milestone_changes_test.xlsx')
+print_miles.save('C:\\Users\\Standalone\\Will\\test.xlsx')

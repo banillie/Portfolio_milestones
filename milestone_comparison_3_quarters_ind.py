@@ -1,13 +1,12 @@
-'''This programme to calculate time difference between reported milestones
+''' This programme calculates time difference between reported milestones for each project
 
 input documents:
-There quarters master information, typically:
+Three quarters master information, typically:
 1) latest quarter data
 2) last quarter data
 3) year ago quarter data
 
 output document:
-Depending on instructions -
 1) individual excel workbooks with project information
 
 To operate the programme you should:
@@ -87,7 +86,6 @@ def ap_p_milestone_data_bulk(project_list, master_data):
 '''
 Function calculates the time difference of reported milestone between two quarters
 '''
-
 def project_time_difference(proj_m_data_1, proj_m_data_2):
     upper_dict = {}
 
@@ -113,7 +111,6 @@ def project_time_difference(proj_m_data_1, proj_m_data_2):
         upper_dict[proj_name] = td_dict
 
     return upper_dict
-
 
 def filter_group(dictionary, group_of_interest):
     project_list = []
@@ -217,18 +214,20 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
 #     return doc
 
 
-'''1) specify file path to master data'''
+'''1) specify file paths to master data for analysis'''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
-                                          'core data\\master_4_2018.xlsx')
+                                          'core data\\test_master.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
                                        'core data\\master_3_2018.xlsx')
 yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
                                           'core data\\master_4_2017.xlsx')
 
+'''2) choose list of projects that require output documents'''
+
 '''all projects in portfolio'''
 current_Q_list = list(current_Q_dict.keys())
 
-'''projects by group'''
+'''projects by group - in development dont use'''
 # group_names = ['Rail Group', 'HSMRPG', 'International Security and Environment', 'Roads Devolution & Motoring']
 #current_Q_list = filter_gmpp(current_Q_dict)
 # current_Q_list = filter_group(current_Q_dict, 'HSMRPG')
@@ -237,13 +236,13 @@ current_Q_list = list(current_Q_dict.keys())
 # current_Q_list = sorted([x for x in current_Q_list if x not in new_projects_not_reporting])
 
 '''single project'''
-#current_Q_list = ['Thameslink Programme']
+#current_Q_list = ['Lower Thames Crossing']
 
-'''2) Specify date after which project milestones should be returned. NOTE: Python date format is (YYYY,MM,DD)'''
-date_of_interest = datetime.date(2018, 9, 1)
+'''3) Specify date after which project milestones should be returned. NOTE: Python date format is (YYYY,MM,DD). So 
+far this is normally 6 months prior to the quarter closing'''
+date_of_interest = datetime.date(2019, 1, 1)
 
-'''3) Specify file path to output document'''
-
+'''4) enter relevant variables in the below functions. More detail on how to control this to follow'''
 current_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, current_Q_dict)
 last_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, last_Q_dict)
 oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict)
@@ -251,6 +250,8 @@ oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict
 first_diff_dict = project_time_difference(current_milestones_dict, last_milestones_dict)
 second_diff_dict = project_time_difference(current_milestones_dict, oldest_milestones_dict)
 
+'''5) enter the file path to where output documents should be saved. Note keep {} in file name as this is where the 
+project name is recorded in the file title'''
 for name in current_Q_list:
         wb = put_into_wb_all(name, current_milestones_dict, first_diff_dict, second_diff_dict)
-        wb.save('C:\\Users\\Standalone\\Will\\Q4_{}_milestone_changes_testing.xlsx'.format(name))
+        wb.save('C:\\Users\\Standalone\\Will\\Q4_1819_{}_milestone_analysis.xlsx'.format(name))
