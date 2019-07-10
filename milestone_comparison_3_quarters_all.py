@@ -7,19 +7,13 @@ There quarters master information, typically:
 3) year ago quarter data
 
 output document:
-Depending on instructions -
-1) excel workbook with all project information
+1) excel workbook with all project milestone information
 
-To operate the programme you should:
-1) Enter the file paths to three quarters master data,
-2) Specify the date from which to filter milestones,
-3) Specify the specify the name and location of the output wb - consider whether to return one wb or multiple ones
+See instructions on how to operate programme below.
 
 '''
 
 #TODO solve problem re filtering in excle when values have + sign in front of the them
-#TODO amend code so easy to run check m_keys_in_excle can be run also
-#TODO create function which returns assurance milestones only
 
 import datetime
 from bcompiler.utils import project_data_from_master
@@ -97,6 +91,25 @@ def ap_p_milestone_data_bulk(project_list, master_data):
 
     return upper_dict
 
+'''Function to filter out assurance milestone data'''
+def assurance_milestone_data_bulk(project_list, master_data):
+    upper_dict = {}
+
+    for name in project_list:
+        try:
+            p_data = master_data[name]
+            lower_dict = {}
+            for i in range(1, 50):
+                lower_dict[p_data['Assurance MM' + str(i)]] = \
+                    {p_data['Assurance MM' + str(i) + ' Forecast - Actual']: p_data['Assurance MM' + str(i) + ' Notes']}
+
+            upper_dict[name] = lower_dict
+        except KeyError:
+            upper_dict[name] = {}
+
+    return upper_dict
+
+'''function that calculates time different between milestone dates'''
 def project_time_difference(proj_m_data_1, proj_m_data_2):
     upper_dict = {}
 
@@ -139,6 +152,7 @@ def filter_gmpp(dictionary):
 
     return project_list
 
+'''Function that places all processed data into excel wb'''
 def put_into_wb_all(project_list, t_dict, td_dict, td_dict2, wb):
     ws = wb.active
 
@@ -198,6 +212,7 @@ def put_into_wb_all(project_list, t_dict, td_dict, td_dict2, wb):
 
     return wb
 
+'''Function that checks whether reported milestone keys have changed between quarters'''
 def check_m_keys_in_excel(project_list, t_dict_one, t_dict_two, t_dict_three):
     wb = Workbook()
     ws = wb.active
@@ -236,6 +251,7 @@ def check_m_keys_in_excel(project_list, t_dict_one, t_dict_two, t_dict_three):
 
     return wb
 
+'''helper function for check_m_keys_in_excle'''
 def longest_list(one, two, three):
     list_list = [one, two, three]
     a = len(one)
@@ -248,11 +264,11 @@ def longest_list(one, two, three):
         if out[-1] == len(x):
             return x
 
-'''Function that runs the programme. This is also where the filtering of dates happens (understand better. date filters
-are currently set at the global level. This is the standard one. It takes all milestones reporting in
-current quarter and prints comparisions against those. It does not check to see whether milestones
-have been removed'''
-def run_comparator(function, proj_list, dict_1, dict_2, dict_3):
+'''Function that runs the milestone checking programme. It takes all milestones reporting in
+current quarter and prints schedule changes. 
+Notes: 1)It does not check to see whether milestones have been removed, 2) the cut off for milestone dates of interest
+is set at a global level below'''
+def run_milestone_comparator(function, proj_list, dict_1, dict_2, dict_3):
     wb = Workbook()
 
     '''gather mini-dictionaries for each quarter'''
@@ -264,10 +280,22 @@ def run_comparator(function, proj_list, dict_1, dict_2, dict_3):
     first_diff_dict = project_time_difference(current_milestones_dict, last_milestones_dict)
     second_diff_dict = project_time_difference(current_milestones_dict, oldest_milestones_dict)
 
-    #run = put_into_wb_all(proj_list, current_milestones_dict, first_diff_dict, second_diff_dict, wb)
+    run = put_into_wb_all(proj_list, current_milestones_dict, first_diff_dict, second_diff_dict, wb)
+
+    return run
+
+'''Function that runs the key checking programme'''
+def run_key_comparator(function, proj_list, dict_1, dict_2, dict_3):
+    '''gather mini-dictionaries for each quarter'''
+    current_milestones_dict = function(proj_list, dict_1)
+    last_milestones_dict = function(proj_list, dict_2)
+    oldest_milestones_dict = function(proj_list, dict_3)
+
     run = check_m_keys_in_excel(proj_list, current_milestones_dict, last_milestones_dict, oldest_milestones_dict)
 
     return run
+
+'''INSTRUCTIONS FOR RUNNING THE PROGRAMME'''
 
 ''' 1) specify file path to master data '''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
@@ -281,7 +309,7 @@ yearago_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters 
 '''option one - all projects'''
 current_Q_list = list(current_Q_dict.keys())
 
-'''option two - group of projects'''
+'''option two - group of projects... in development'''
 # group_of_projects_list = ['Rail Group', 'HSMRPG', 'International Security and Environment', 'Roads Devolution & Motoring']
 
 '''option three - single project'''
@@ -290,9 +318,12 @@ current_Q_list = list(current_Q_dict.keys())
 '''3) Specify date after which project milestones should be returned. NOTE: Python date format is (YYYY,MM,DD)'''
 date_of_interest = datetime.date(2019, 1, 1)
 
-'''4) choose type of milestones that you want to analysis through selecting appropriate function below
-further instructions to follow'''
-print_miles = run_comparator(all_milestone_data_bulk, current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
+'''4) choose the type of variables that you would like to place in run_milestone_comparator function, below. 
+The type of milestone you wish to analysis can be specified through choosing
+all_milestone_data_bulk, ap_p_milestone_data_bulk, or assurance_milestone_data_bulk functions. This choice should be the 
+first to be inserted into the below function. After this select the list of the projects on which to perform analysis 
+and then the three quarters data that you have put into variables above, in order of newest to oldest.'''
+print_miles = run_milestone_comparator(assurance_milestone_data_bulk, current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
 
 '''5) specify file path to output document'''
 print_miles.save('C:\\Users\\Standalone\\Will\\testing.xlsx')

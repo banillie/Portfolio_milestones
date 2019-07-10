@@ -91,6 +91,24 @@ def ap_p_milestone_data_bulk(project_list, master_data):
 
     return upper_dict
 
+'''Function to filter out assurance milestone data'''
+def assurance_milestone_data_bulk(project_list, master_data):
+    upper_dict = {}
+
+    for name in project_list:
+        try:
+            p_data = master_data[name]
+            lower_dict = {}
+            for i in range(1, 50):
+                lower_dict[p_data['Assurance MM' + str(i)]] = \
+                    {p_data['Assurance MM' + str(i) + ' Forecast - Actual']: p_data['Assurance MM' + str(i) + ' Notes']}
+
+            upper_dict[name] = lower_dict
+        except KeyError:
+            upper_dict[name] = {}
+
+    return upper_dict
+
 '''Function calculates the time difference of reported milestone between two quarters'''
 def project_time_difference(proj_m_data_1, proj_m_data_2):
     upper_dict = {}
@@ -193,6 +211,7 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
 
     return wb
 
+'''INSTRUCTIONS FOR RUNNING THE PROGRAMME'''
 
 '''1) specify file paths to master data for analysis'''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\'
@@ -209,11 +228,6 @@ current_Q_list = list(current_Q_dict.keys())
 
 '''projects by group - in development dont use'''
 # group_names = ['Rail Group', 'HSMRPG', 'International Security and Environment', 'Roads Devolution & Motoring']
-#current_Q_list = filter_gmpp(current_Q_dict)
-# current_Q_list = filter_group(current_Q_dict, 'HSMRPG')
-# last_Q_list = filter_group(last_Q_dict, 'HSMRPG')
-# new_projects_not_reporting = [x for x in current_Q_list if x not in last_Q_list]
-# current_Q_list = sorted([x for x in current_Q_list if x not in new_projects_not_reporting])
 
 '''single project'''
 #current_Q_list = ['Lower Thames Crossing']
