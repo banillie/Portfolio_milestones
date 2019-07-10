@@ -1,24 +1,21 @@
 ''' This programme calculates time difference between reported milestones for each project
 
 input documents:
-Three quarters master information, typically:
-1) latest quarter data
-2) last quarter data
-3) year ago quarter data
+1) Three quarters master information, typically: latest quarter data, last quarter data, year ago quarter data
+2) user needs to set date of interest
 
 output document:
-1) individual excel workbooks with project information
+1) individual excel workbooks with project milestone analysis
+2) individual excel workbooks highlight where reported project milestones have changed.
 
-To operate the programme you should:
-1) Enter the file paths to three quarters master data,
-2) Specify the date from which to filter milestones,
-3) Specify the specify the name and location of the output wb
+See instructions below on how to operate. 
 
 '''
 
 import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
+from openpyxl.styles import Font
 
 '''Function to filter out ALL milestone data'''
 def all_milestone_data_bulk(project_list, master_data):
@@ -128,7 +125,6 @@ def project_time_difference(proj_m_data_1, proj_m_data_2):
                             else:
                                 td_dict[milestone] = time_delta
                         except (KeyError, TypeError):
-                            print(milestone)
                             td_dict[milestone] = 'not reported' # not reported that quarter
                 except (KeyError, TypeError):
                     td_dict[milestone] = 'No date provided' # date has now been removed
@@ -211,6 +207,58 @@ def put_into_wb_all(name, t_dict, td_dict, td_dict2):
 
     return wb
 
+'''Function that checks whether reported milestone keys have changed between quarters'''
+def check_m_keys_in_excel(name, t_dict_one, t_dict_two, t_dict_three):
+    wb = Workbook()
+    ws = wb.active
+    red_text = Font(color="00fc2525")
+
+    row_num = 2
+
+    one = list(t_dict_one[name].keys())
+    [x for x in one if x is not None].sort()
+    two = list(t_dict_two[name].keys())
+    [x for x in two if x is not None].sort()
+    three = list(t_dict_three[name].keys())
+    [x for x in three if x is not None].sort()
+
+    long = longest_list(one, two, three)
+    for i in range(0, len(long)):
+        ws.cell(row=row_num + i, column=1).value = name
+        try:
+            ws.cell(row=row_num + i, column=2).value = one[i]
+        except IndexError:
+            pass
+        try:
+            ws.cell(row=row_num + i, column=3).value = two[i]
+            if two[i] not in one:
+                ws.cell(row=row_num + i, column=3).font = red_text
+        except IndexError:
+            pass
+        try:
+            ws.cell(row=row_num + i, column=4).value = three[i]
+            if three[i] not in one:
+                ws.cell(row=row_num + i, column=4).font = red_text
+        except IndexError:
+            pass
+
+    #row_num = row_num + len(long)
+
+    return wb
+
+'''helper function for check_m_keys_in_excle'''
+def longest_list(one, two, three):
+    list_list = [one, two, three]
+    a = len(one)
+    b = len(two)
+    c = len(three)
+
+    out = [a,b,c]
+    out.sort()
+    for x in list_list:
+        if out[-1] == len(x):
+            return x
+
 '''INSTRUCTIONS FOR RUNNING THE PROGRAMME'''
 
 '''1) specify file paths to master data for analysis'''
@@ -236,7 +284,11 @@ current_Q_list = list(current_Q_dict.keys())
 far this is normally 6 months prior to the quarter closing'''
 date_of_interest = datetime.date(2019, 1, 1)
 
-'''4) enter relevant variables in the below functions. More detail on how to control this to follow'''
+'''4) enter relevant variables in the below functions. 
+The type of milestone you wish to analyse can be specified through choosing
+all_milestone_data_bulk, ap_p_milestone_data_bulk, or assurance_milestone_data_bulk functions.
+the variables to be placed into the functions are firstly list of projects to be analysed and secondly the quarters
+variable above corresponding to the variable you are creating'''
 current_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, current_Q_dict)
 last_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, last_Q_dict)
 oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict)
@@ -244,8 +296,20 @@ oldest_milestones_dict = ap_p_milestone_data_bulk(current_Q_list, yearago_Q_dict
 first_diff_dict = project_time_difference(current_milestones_dict, last_milestones_dict)
 second_diff_dict = project_time_difference(current_milestones_dict, oldest_milestones_dict)
 
-'''5) enter the file path to where output documents should be saved. Note keep {} in file name as this is where the 
-project name is recorded in the file title'''
+'''5) running the milestone comparision programme. you must firstly ensure in the first line of the code that the list 
+of projects you want to analysis is consistent with the list you have specified above. you then select the relevant 
+variables for the put_into_wb_all function. Finally enter the file path to where output documents should be saved. 
+Note keep {} in file name as this is where the project name is recorded in the file title'''
 for name in current_Q_list:
-        wb = put_into_wb_all(name, current_milestones_dict, first_diff_dict, second_diff_dict)
-        wb.save('C:\\Users\\Standalone\\Will\\Q4_1819_{}_milestone_analysis.xlsx'.format(name))
+    print('Doing milestone movement analysis for ' + str(name))
+    wb = put_into_wb_all(name, current_milestones_dict, first_diff_dict, second_diff_dict)
+    wb.save('C:\\Users\\Standalone\\Will\\Q1_1920_{}_milestone_movement_analysis.xlsx'.format(name))
+
+'''6) running the milestone key comparision programme. you must firstly ensure in the first line of the code that the list 
+of projects you want to analysis is consistent with the list you have specified above. in this case it is simple the three
+quarters variable data above, from newest to oldest. Finally enter the file path to where output documents should be saved. 
+Note keep {} in file name as this is where the project name is recorded in the file title'''
+for name in current_Q_list:
+    print('Doing milestone key name checking for ' + str(name))
+    wb = check_m_keys_in_excel(name, current_milestones_dict, last_milestones_dict, oldest_milestones_dict)
+    wb.save('C:\\Users\\Standalone\\Will\\Q1_1920_{}_milestone_keys_check.xlsx'.format(name))
