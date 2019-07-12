@@ -19,95 +19,8 @@ import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
 from openpyxl.styles import Font
+from milestone_functions import all_milestone_data_bulk, ap_p_milestone_data_bulk, assurance_milestone_data_bulk
 
-'''Function to filter out ALL milestone data'''
-def all_milestone_data_bulk(project_list, master_data):
-    upper_dict = {}
-
-    for name in project_list:
-        try:
-            p_data = master_data[name]
-            lower_dict = {}
-            for i in range(1, 50):
-                try:
-                    try:
-                        lower_dict[p_data['Approval MM' + str(i)]] = \
-                            {p_data['Approval MM' + str(i) + ' Forecast / Actual']: p_data[
-                                'Approval MM' + str(i) + ' Notes']}
-                    except KeyError:
-                        lower_dict[p_data['Approval MM' + str(i)]] = \
-                            {p_data['Approval MM' + str(i) + ' Forecast - Actual']: p_data[
-                                'Approval MM' + str(i) + ' Notes']}
-
-                    lower_dict[p_data['Assurance MM' + str(i)]] = \
-                        {p_data['Assurance MM' + str(i) + ' Forecast - Actual']: p_data[
-                                'Assurance MM' + str(i) + ' Notes']}
-                except KeyError:
-                    pass
-
-            for i in range(18, 67):
-                try:
-                    lower_dict[p_data['Project MM' + str(i)]] = \
-                        {p_data['Project MM' + str(i) + ' Forecast - Actual']: p_data['Project MM' + str(i) + ' Notes']}
-                except KeyError:
-                    pass
-        except KeyError:
-            lower_dict = {}
-
-        upper_dict[name] = lower_dict
-
-    return upper_dict
-
-'''Function to filer out approval and project delivery milestones'''
-def ap_p_milestone_data_bulk(project_list, master_data):
-    upper_dict = {}
-
-    for name in project_list:
-        try:
-            p_data = master_data[name]
-            lower_dict = {}
-            for i in range(1, 50):
-                try:
-                    try:
-                        lower_dict[p_data['Approval MM' + str(i)]] = \
-                            {p_data['Approval MM' + str(i) + ' Forecast / Actual'] : p_data['Approval MM' + str(i) + ' Notes']}
-                    except KeyError:
-                        lower_dict[p_data['Approval MM' + str(i)]] = \
-                            {p_data['Approval MM' + str(i) + ' Forecast - Actual'] : p_data['Approval MM' + str(i) + ' Notes']}
-
-                except KeyError:
-                    pass
-
-            for i in range(18, 67):
-                try:
-                    lower_dict[p_data['Project MM' + str(i)]] = \
-                        {p_data['Project MM' + str(i) + ' Forecast - Actual'] : p_data['Project MM' + str(i) + ' Notes']}
-                except KeyError:
-                    pass
-        except KeyError:
-            lower_dict = {}
-
-        upper_dict[name] = lower_dict
-
-    return upper_dict
-
-'''Function to filter out assurance milestone data'''
-def assurance_milestone_data_bulk(project_list, master_data):
-    upper_dict = {}
-
-    for name in project_list:
-        try:
-            p_data = master_data[name]
-            lower_dict = {}
-            for i in range(1, 50):
-                lower_dict[p_data['Assurance MM' + str(i)]] = \
-                    {p_data['Assurance MM' + str(i) + ' Forecast - Actual']: p_data['Assurance MM' + str(i) + ' Notes']}
-
-            upper_dict[name] = lower_dict
-        except KeyError:
-            upper_dict[name] = {}
-
-    return upper_dict
 
 '''function that calculates time different between milestone dates'''
 def project_time_difference(proj_m_data_1, proj_m_data_2):
@@ -323,7 +236,7 @@ The type of milestone you wish to analysis can be specified through choosing
 all_milestone_data_bulk, ap_p_milestone_data_bulk, or assurance_milestone_data_bulk functions. This choice should be the 
 first to be inserted into the below function. After this select the list of the projects on which to perform analysis 
 and then the three quarters data that you have put into variables above, in order of newest to oldest.'''
-print_miles = run_milestone_comparator(assurance_milestone_data_bulk, current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
+print_miles = run_milestone_comparator(ap_p_milestone_data_bulk, current_Q_list, current_Q_dict, last_Q_dict, yearago_Q_dict)
 
 '''5) specify file path to output document'''
 print_miles.save('C:\\Users\\Standalone\\Will\\testing.xlsx')
