@@ -8,7 +8,7 @@ output document:
 1) individual excel workbooks with project milestone analysis
 2) individual excel workbooks highlight where reported project milestones have changed.
 
-See instructions below on how to operate. 
+See instructions below on how to operate.
 
 '''
 
@@ -16,6 +16,7 @@ import datetime
 from bcompiler.utils import project_data_from_master
 from openpyxl import Workbook
 from openpyxl.styles import Font
+#from milestone_functions import all_milestone_data_bulk, ap_p_milestone_data_bulk, assurance_milestone_data_bulk
 
 '''Function to filter out ALL milestone data'''
 def all_milestone_data_bulk(project_list, master_data):
