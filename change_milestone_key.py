@@ -4,7 +4,7 @@ working. bit of a hack at the mo though. further work required to finalise it an
 
 '''
 
-#TODO get code to handle none data. 
+#TODO get code to handle none data.
 
 from bcompiler.utils import project_data_from_master
 from openpyxl import load_workbook
