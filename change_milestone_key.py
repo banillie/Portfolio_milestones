@@ -4,7 +4,7 @@ working. bit of a hack at the mo though. further work required to finalise it an
 
 '''
 
-#TODO solve problem re filtering in excle when values have + sign in front of the them
+#TODO get code to handle none data. 
 
 from bcompiler.utils import project_data_from_master
 from openpyxl import load_workbook
@@ -230,7 +230,11 @@ def change_key(proj_list, q_master_wb_title_list, baseline_list, key_change_dict
 
 '''INSTRUCTIONS FOR RUNNING THE PROGRAMME'''
 
-'''1) load all master quarter data files here'''
+'''1) load all master quarter data files here. They have to be store twice. The first time they are converted into
+dictionaries. The second time the filepath is stored as a part of the list (this is so the current masters can be 
+opened amended and saved again, make sure lists are identical'''
+
+'''i) dictionaries'''
 q1_1920 = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_1_2019_wip'
                                    '_(25_7_19).xlsx')
 q4_1819 = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_4_2018.xlsx')
@@ -244,6 +248,7 @@ q1_1718 = project_data_from_master('C:\\Users\\Standalone\\general\\masters fold
 q4_1617 = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_4_2016.xlsx')
 q3_1617 = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_3_2016.xlsx')
 
+'''ii) list of file paths to masters'''
 master_list = ('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_1_2019_wip_(25_7_19).xlsx',
                'C:\\Users\\Standalone\\general\\masters folder\\core data\\master_4_2018.xlsx',
                'C:\\Users\\Standalone\\general\\masters folder\\core data\\master_3_2018.xlsx',
@@ -256,17 +261,21 @@ master_list = ('C:\\Users\\Standalone\\general\\masters folder\\core data\\maste
                'C:\\Users\\Standalone\\general\\masters folder\\core data\\master_4_2016.xlsx',
                'C:\\Users\\Standalone\\general\\masters folder\\core data\\master_3_2016.xlsx')
 
-'''2) Include in the below list, as the variable names, those quarters to include in analysis'''
-list_of_dicts_all = [q1_1920 ,q4_1819, q3_1819, q2_1819, q1_1819, q4_1718, q3_1718, q2_1718, q1_1718, q4_1617, q3_1617]
+'''2) Put the masters dictionaries into a list. '''
+list_of_dicts_all = [q1_1920, q4_1819, q3_1819, q2_1819, q1_1819, q4_1718, q3_1718, q2_1718, q1_1718, q4_1617, q3_1617]
 #list_of_dicts_bespoke = [zero, last]
 
-key_change = project_data_from_master('C:\\Users\\Standalone\\general\\change_milestone_key_testing_2.xlsx')
+'''3) provide file path to document which contains information on the data that needs to be changed'''
+key_change = project_data_from_master('C:\\Users\\Standalone\\general\\change_milestone_key_testing.xlsx')
 
-proj_list = list(q1_1920.keys())
+'''4) list of projects. taken from the key change document - as this contains the only projects that need information 
+changed'''
+proj_list = list(key_change.keys())
 proj_list_bespoke = ['South West Route Capacity', 'North of England Programme']
 
 '''ignore this part. no change required'''
 baseline_bc = bc_ref_stages(proj_list, list_of_dicts_all)
 q_master_baseline_no = get_master_baseline_dict(proj_list, list_of_dicts_all, baseline_bc)
 
-change_key(proj_list_bespoke, master_list, q_master_baseline_no, key_change)
+'''5) enter relevant variables in the change_key function'''
+change_key(proj_list, master_list, q_master_baseline_no, key_change)
